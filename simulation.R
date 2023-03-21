@@ -120,11 +120,13 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
     
     semester <- ifelse(year - floor(year) == 0, 'Spring', 'Fall')
     
-    if (semester == 'Fall') grads <- cohort(year, grads, arch_lambda, cult_lambda, evo_lambda)
-    
-    completed_grads <- sum(map_lgl(grads, function(x) x$completed))
-    cat(paste('\n\nActive grad cohort:', length(grads)-completed_grads))
-    cat(paste('\nCompleted:', completed_grads))
+    if (semester == 'Fall'){
+      grads <- cohort(year, grads, arch_lambda, cult_lambda, evo_lambda)
+      
+      completed_grads <- sum(map_lgl(grads, function(x) x$completed))
+      cat(paste('\n\nActive grad cohort:', length(grads)-completed_grads))
+      cat(paste('\nCompleted:', completed_grads))
+    }
     
     for (i in seq_along(grads)){
       
