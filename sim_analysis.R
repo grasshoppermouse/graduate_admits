@@ -15,6 +15,8 @@ d_sum <-
     N = n()
   )
 
+# Elective course numbers must be divided by the average number
+# of elective courses offered each semester
 ggplot(d_sum, aes(N, course)) +
   geom_count() +
   theme_minimal(15)
