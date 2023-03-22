@@ -112,7 +112,7 @@ student <- function(year, stream){
     stream = stream,
     MA = sample(MA), # randomize order
     PhD = sample(PhD), # randomize order
-    completed = FALSE # Finished taking all courses or left program
+    year_completed = NA # Finished taking all courses or left program
   )
 }
 
@@ -175,7 +175,7 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
     if (semester == 'Fall'){
       grads <- cohort(year, grads, arch_lambda, cult_lambda, evo_lambda)
       
-      completed_grads <- sum(map_lgl(grads, function(x) x$completed))
+      completed_grads <- sum(map_lgl(grads, function(x) !is.na(x$year_completed)))
       cat(paste('\n\nActive grad cohort:', length(grads)-completed_grads))
       cat(paste('\nCompleted:', completed_grads))
     }
@@ -188,12 +188,12 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
     for (i in seq_along(grads)){
       
       grad <- grads[[i]]
-      if (grad$completed) next
+      if (!is.na(grad$year_completed)) next
       
       program_year <- year - grad$year_admitted + 1
       
       # MA or PhD?
-      if (program_year <= 2){
+      if (program_year <= 2 | length(grads[[i]]$MA) > 0){
         degree <- "MA"
       } else {
         degree <- "PhD"
@@ -212,8 +212,8 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       grads[[i]][[degree]] <- grad[[degree]][-(match(grad_schedule, grad[[degree]]))]
       
       # At end of second year, an average of 50% of students leave
-      if (program_year == 2 & rbinom(1, 1, 0.5)) grads[[i]]$completed <- TRUE
-      if (length(grads[[i]]$PhD) == 0) grads[[i]]$completed <- TRUE
+      if (program_year == 2 & rbinom(1, 1, 0.5)) grads[[i]]$year_completed <- year
+      if (length(grads[[i]]$MA) == 0 & length(grads[[i]]$PhD) == 0) grads[[i]]$year_completed <- year
       
       # Add this students courses to data frame of all courses taken
       courses <- rbind(
@@ -226,5 +226,8 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       )
     }
   }
-  return(courses)
+  list(
+    courses = courses,
+    grads = grads
+  )
 }

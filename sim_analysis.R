@@ -2,7 +2,8 @@
 source('simulation.R')
 
 years <- seq(2000.5, 2050, 0.5)
-d <- sim(years)
+out <- sim(years)
+d <- out$courses
 
 # Summarize enrollments by year, semester, and course
 d_sum <-
