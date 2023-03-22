@@ -36,7 +36,7 @@ ggplot(d_sum, aes(N, course)) +
   labs(
     title = 'Course enrollment distribution',
     subtitle = 'Red cross: median enrollment',
-    x = '\nEnrollment',
+    x = '\nEnrollment per semester',
     y = ''
   ) +
   theme_minimal(15)
