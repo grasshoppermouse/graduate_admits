@@ -184,9 +184,9 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       # Remove these courses from list of courses still needed for degree
       grads[[i]][[degree]] <- grad[[degree]][-(match(grad_schedule, grad[[degree]]))]
       
-      # At end of second year, an average of 60% of students leave
-      if (program_year == 2 & rbinom(1, 1, 0.6)) grads[[i]]$completed <- TRUE
-      if (length(grad$PhD) == 0) grads[[i]]$completed <- TRUE
+      # At end of second year, an average of 50% of students leave
+      if (program_year == 2 & rbinom(1, 1, 0.5)) grads[[i]]$completed <- TRUE
+      if (length(grads[[i]]$PhD) == 0) grads[[i]]$completed <- TRUE
       
       # Add this students courses to data frame of all courses taken
       courses <- rbind(
