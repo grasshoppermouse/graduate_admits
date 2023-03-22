@@ -1,15 +1,14 @@
-library(tidyverse)
 
 source('simulation.R')
 
-years <- seq(2010.5, 2030, 0.5)
+years <- seq(2000.5, 2050, 0.5)
 d <- sim(years)
 
 # Summarize enrollments by year, semester, and course
 d_sum <-
   d %>%
   mutate(
-    semester = ifelse(year - floor(year) == 0, 'Spring', 'Fall')
+    semester = ifelse(year - floor(year) == 0, 'spring', 'fall')
   ) %>%
   group_by(year, semester, course) %>%
   summarise(
@@ -33,6 +32,7 @@ d_sum$course <- factor(d_sum$course, levels = levels(d_median$course))
 ggplot(d_sum, aes(N, course)) +
   geom_count() +
   geom_point(data = d_median, aes(median, course), colour = 'red', shape = 3, size = 5) +
+  xlim(0,NA) +
   labs(
     title = 'Course enrollment distribution',
     subtitle = 'Red cross: median enrollment',

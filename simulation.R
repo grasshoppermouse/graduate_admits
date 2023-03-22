@@ -1,4 +1,4 @@
-
+library(tidyverse)
 
 # Stream degree requirements ----------------------------------------------
 
@@ -50,15 +50,37 @@ cultPhD <- c("cult comm", "open elective", "open elective")
 evoMA <- c("537", "evo elective", "evo elective", "evo elective", "arch elective", "cult elective", "open elective", "open elective", "open elective")
 evoPhD <- c("evo elective", "evo elective", "evo elective", "open elective", "open elective", "open elective", "open elective", "open elective")
 
+# Course catalog by year and semester
+
+course_catalog <- tribble(
+  ~course,            ~year,     ~semester,
+  'arch lab',         'every',    'both',
+  'arch elective',    'every',    'both',
+  'cult elective',    'every',    'both',
+  'evo elective',     'every',    'both',
+  'open elective',    'every',    'both',
+  'cult theory',      'every',    'both',
+  'cult ethnography', 'every',    'both',
+  '530',              'every',    'fall',
+  '537',              'every',    'fall',
+  '554',              'every',    'fall',
+  'cult comm',        'even',     'spring',
+  'cult linguistic',  'odd',      'spring',
+)
+
 # This function spits out the course offerings for each semester, e.g.,
 # 2020.0 is Spring semester, and 2020.5 is Fall semester
 course_schedule <- function(year){
-  semester <- ifelse(year - floor(year) == 0, 'Spring', 'Fall')
-  spring <- c('cult comm', 'cult linguistic')
-  fall <- c('530', '537', '554')
-  both <- c('arch lab', 'arch elective', 'cult elective', 'evo elective', 'open elective', 'cult theory', 'cult ethnography')
-  if (semester == 'Spring') return(c(spring, both))
-  return(c(fall, both))
+  even_odd_year <- ifelse(floor(year) %% 2 == 0, 'even', 'odd')
+  thissemester <- ifelse(year - floor(year) == 0, 'spring', 'fall')
+
+  offerings <- 
+    course_catalog %>% 
+    dplyr::filter(
+      year == 'every' | year == even_odd_year,
+      semester == 'both' | semester == thissemester
+    )
+  return(offerings$course)
 }
 
 # This function creates a grad student,
@@ -155,6 +177,8 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       cat(paste('\nCompleted:', completed_grads))
     }
     
+    course_offerings <- course_schedule(year)
+    
     # Loop through all grads and check if they still
     # need to take courses and if those courses are offered
     # this semester
@@ -173,7 +197,7 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       }
       
       # Course offerings that fulfill degree requirements
-      available <- intersect(grad[[degree]], course_schedule(year))
+      available <- intersect(grad[[degree]], course_offerings)
       if (length(available) == 0) next
       
       # Everyone takes 3 courses every semester until degree requirements are met 
