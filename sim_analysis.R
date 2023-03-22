@@ -5,6 +5,7 @@ source('simulation.R')
 years <- seq(2010.5, 2030, 0.5)
 d <- sim(years)
 
+# Summarize enrollments by year, semester, and course
 d_sum <-
   d %>%
   mutate(
