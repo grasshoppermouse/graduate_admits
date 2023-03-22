@@ -37,7 +37,7 @@ ggplot(d_sum, aes(N, course, colour=Frequency)) +
   guides(colour = guide_legend(override.aes = list(size = 5))) +
   labs(
     title = 'Course enrollment distribution',
-    subtitle = 'Red cross: median enrollment',
+    subtitle = 'Cross: median enrollment',
     x = '\nEnrollment per semester',
     y = ''
   ) +
