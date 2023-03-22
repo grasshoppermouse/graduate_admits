@@ -53,32 +53,35 @@ evoPhD <- c("evo elective", "evo elective", "evo elective", "open elective", "op
 # Course catalog by year and semester
 
 course_catalog <- tribble(
-  ~course,            ~year,     ~semester,
-  'arch lab',         'every',    'both',
-  'arch elective',    'every',    'both',
-  'cult elective',    'every',    'both',
-  'evo elective',     'every',    'both',
-  'open elective',    'every',    'both',
-  'cult theory',      'every',    'both',
-  'cult ethnography', 'every',    'both',
-  '530',              'every',    'fall',
-  '537',              'every',    'fall',
-  '554',              'every',    'fall',
-  'cult comm',        'even',     'spring',
-  'cult linguistic',  'odd',      'spring',
-)
+  ~course,            ~year,            ~semester,
+  'arch lab',         'Every year',    'Both semesters',
+  'arch elective',    'Every year',    'Both semesters',
+  'cult elective',    'Every year',    'Both semesters',
+  'evo elective',     'Every year',    'Both semesters',
+  'open elective',    'Every year',    'Both semesters',
+  'cult theory',      'Every year',    'Both semesters',
+  'cult ethnography', 'Every year',    'Both semesters',
+  '530',              'Every year',    'Fall',
+  '537',              'Every year',    'Fall',
+  '554',              'Every year',    'Fall',
+  'cult comm',        'Even years',    'Spring',
+  'cult linguistic',  'Odd years',     'Spring'
+) %>% 
+  mutate(
+    Frequency = paste(semester, year)
+  )
 
 # This function spits out the course offerings for each semester, e.g.,
 # 2020.0 is Spring semester, and 2020.5 is Fall semester
 course_schedule <- function(year){
-  even_odd_year <- ifelse(floor(year) %% 2 == 0, 'even', 'odd')
-  thissemester <- ifelse(year - floor(year) == 0, 'spring', 'fall')
+  even_odd_year <- ifelse(floor(year) %% 2 == 0, 'Even years', 'Odd years')
+  thissemester <- ifelse(year - floor(year) == 0, 'Spring', 'Fall')
 
   offerings <- 
     course_catalog %>% 
     dplyr::filter(
-      year == 'every' | year == even_odd_year,
-      semester == 'both' | semester == thissemester
+      year == 'Every year' | year == even_odd_year,
+      semester == 'Both semesters' | semester == thissemester
     )
   return(offerings$course)
 }
@@ -200,7 +203,7 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       available <- intersect(grad[[degree]], course_offerings)
       if (length(available) == 0) next
       
-      # Everyone takes 3 courses every semester until degree requirements are met 
+      # Every yearone takes 3 courses Every year semester until degree requirements are met 
       # (or at least as many needed courses are available)
       num_courses <- min(length(available), 3)
       grad_schedule <- available[1:num_courses]

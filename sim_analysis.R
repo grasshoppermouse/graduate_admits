@@ -13,7 +13,8 @@ d_sum <-
   group_by(year, semester, course) %>%
   summarise(
     N = n()
-  )
+  ) %>% 
+  left_join(course_catalog[c('course', 'Frequency')])
 
 d_median <-
   d_sum %>% 
@@ -29,10 +30,11 @@ d_sum$course <- factor(d_sum$course, levels = levels(d_median$course))
 
 # Elective course numbers must be divided by the average number
 # of elective courses offered each semester
-ggplot(d_sum, aes(N, course)) +
+ggplot(d_sum, aes(N, course, colour=Frequency)) +
   geom_count() +
-  geom_point(data = d_median, aes(median, course), colour = 'red', shape = 3, size = 5) +
+  geom_point(data = d_median, aes(median, course), colour = 'black', shape = 3, size = 6) +
   xlim(0,NA) +
+  guides(colour = guide_legend(override.aes = list(size = 5))) +
   labs(
     title = 'Course enrollment distribution',
     subtitle = 'Red cross: median enrollment',
