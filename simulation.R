@@ -1,6 +1,6 @@
 library(tidyverse)
 
-# Stream degree requirements ----------------------------------------------
+# Stream degree requirements
 
 # Arch MA 
 # reqs: 530, 537, 1 cult elective, 1 evo elective
@@ -112,7 +112,9 @@ student <- function(year, stream){
     stream = stream,
     MA = sample(MA), # randomize order
     PhD = sample(PhD), # randomize order
-    year_completed = NA # Finished taking all courses or left program
+    MA_completed = NA, # Year finished taking all MA courses
+    PhD_completed = NA, # Year finished taking all PhD courses
+    completed = FALSE
   )
 }
 
@@ -175,7 +177,7 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
     if (semester == 'Fall'){
       grads <- cohort(year, grads, arch_lambda, cult_lambda, evo_lambda)
       
-      completed_grads <- sum(map_lgl(grads, function(x) !is.na(x$year_completed)))
+      completed_grads <- sum(map_lgl(grads, function(x) x$completed))
       cat(paste('\n\nActive grad cohort:', length(grads)-completed_grads))
       cat(paste('\nCompleted:', completed_grads))
     }
@@ -188,12 +190,12 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
     for (i in seq_along(grads)){
       
       grad <- grads[[i]]
-      if (!is.na(grad$year_completed)) next
+      if (grad$completed) next
       
       program_year <- year - grad$year_admitted + 1
       
       # MA or PhD?
-      if (program_year <= 2 | length(grads[[i]]$MA) > 0){
+      if (length(grads[[i]]$MA) > 0){
         degree <- "MA"
       } else {
         degree <- "PhD"
@@ -203,7 +205,7 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       available <- intersect(grad[[degree]], course_offerings)
       if (length(available) == 0) next
       
-      # Every yearone takes 3 courses Every year semester until degree requirements are met 
+      # Every year everyone takes 3 courses every semester until degree requirements are met 
       # (or at least as many needed courses are available)
       num_courses <- min(length(available), 3)
       grad_schedule <- available[1:num_courses]
@@ -211,9 +213,16 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       # Remove these courses from list of courses still needed for degree
       grads[[i]][[degree]] <- grad[[degree]][-(match(grad_schedule, grad[[degree]]))]
       
-      # At end of second year, an average of 50% of students leave
-      if (program_year == 2 & rbinom(1, 1, 0.5)) grads[[i]]$year_completed <- year
-      if (length(grads[[i]]$MA) == 0 & length(grads[[i]]$PhD) == 0) grads[[i]]$year_completed <- year
+      # After finishing MA, an average of 50% of students leave
+      if (degree == 'MA' & length(grads[[i]]$MA) == 0){
+        grads[[i]]$MA_completed <- year
+        if (rbinom(1, 1, 0.5)) grads[[i]]$completed <- TRUE
+      } 
+      
+      if (degree == 'PhD' & length(grads[[i]]$PhD) == 0){
+        grads[[i]]$PhD_completed <- year
+        grads[[i]]$completed <- TRUE
+      } 
       
       # Add this students courses to data frame of all courses taken
       courses <- rbind(
@@ -226,8 +235,13 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       )
     }
   }
+  
+  df_grads <-
+    map(grads, function(x) as.data.frame(x[c('year_admitted', 'stream', 'MA_completed', 'PhD_completed')])) %>%
+    list_rbind()
+  
   list(
     courses = courses,
-    grads = grads
+    grads = df_grads
   )
 }

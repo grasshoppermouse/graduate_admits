@@ -3,6 +3,20 @@ source('simulation.R')
 
 years <- seq(2000.5, 2050, 0.5)
 out <- sim(years)
+
+grads <- out$grads
+
+grads %>% 
+  mutate(
+    MA_time = MA_completed - year_admitted + 0.5,
+    PhD_time = PhD_completed - year_admitted + 0.5
+  ) %>% 
+  group_by(stream) %>% 
+  summarise(
+    MeanMATime = mean(MA_time, na.rm = T),
+    MeanPhDTime = mean(PhD_time, na.rm = T)
+  )
+  
 d <- out$courses
 
 # Summarize enrollments by year, semester, and course
@@ -43,3 +57,4 @@ ggplot(d_sum, aes(N, course, colour=Frequency)) +
     y = ''
   ) +
   theme_minimal(15)
+
