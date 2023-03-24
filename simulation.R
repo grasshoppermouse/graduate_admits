@@ -18,7 +18,7 @@ library(tidyverse)
 # If, e.g., multiple "arch electives" are required, then they appear
 # the necessary number of times
 
-archMA<- c("530", "537", "cult elective", "evo elective", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
+archMA<- c("arch theory 530", "quant 537", "cult elective", "evo elective", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
 archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "open elective", "open elective", "open elective", "open elective")
 
 # Cult MA
@@ -34,7 +34,7 @@ archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "ope
 # 2 open electives
 # 20 units of 800
 
-cultMA <- c("537", "554", "arch elective", "evo elective", "cult theory", "cult theory", "cult ethnography", "cult ethnography", "cult linguistic", "open elective", "open elective")
+cultMA <- c("quant 537", "field methods 554", "arch elective", "evo elective", "cult theory", "cult theory", "cult ethnography", "cult ethnography", "cult linguistic", "open elective", "open elective")
 cultPhD <- c("cult comm", "open elective", "open elective")
 
 # Evo MA
@@ -47,7 +47,7 @@ cultPhD <- c("cult comm", "open elective", "open elective")
 # 5 open electives
 # 20 units 800
 
-evoMA <- c("537", "evo elective", "evo elective", "evo elective", "arch elective", "cult elective", "open elective", "open elective", "open elective")
+evoMA <- c("quant 537", "evo elective", "evo elective", "evo elective", "arch elective", "cult elective", "open elective", "open elective", "open elective")
 evoPhD <- c("evo elective", "evo elective", "evo elective", "open elective", "open elective", "open elective", "open elective", "open elective")
 
 # Course catalog by year and semester
@@ -61,9 +61,9 @@ course_catalog <- tribble(
   'open elective',    'Every year',    'Both semesters',
   'cult theory',      'Every year',    'Both semesters',
   'cult ethnography', 'Every year',    'Both semesters',
-  '530',              'Every year',    'Fall',
-  '537',              'Every year',    'Fall',
-  '554',              'Every year',    'Fall',
+  'arch theory 530',  'Every year',    'Fall',
+  'quant 537',        'Every year',    'Fall',
+  'field methods 554','Every year',    'Fall',
   'cult comm',        'Even years',    'Spring',
   'cult linguistic',  'Odd years',     'Spring'
 ) %>% 
@@ -167,6 +167,8 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
     student_stream = character()
   )
   
+  active_grads <- integer()
+  
   for (year in years){
     
     # E.g., 2020.0 is Spring, 2020.5 is Fall
@@ -178,8 +180,9 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       grads <- cohort(year, grads, arch_lambda, cult_lambda, evo_lambda)
       
       completed_grads <- sum(map_lgl(grads, function(x) x$completed))
-      cat(paste('\n\nActive grad cohort:', length(grads)-completed_grads))
-      cat(paste('\nCompleted:', completed_grads))
+      active_grads <- c(active_grads, length(grads)-completed_grads)
+      # cat(paste('\n\nActive grad cohort:', length(grads)-completed_grads))
+      # cat(paste('\nCompleted:', completed_grads))
     }
     
     course_offerings <- course_schedule(year)
@@ -235,6 +238,9 @@ sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
       )
     }
   }
+  
+  cat('Summary of the number of grads actively taking courses each semester:\n')
+  print(summary(active_grads))
   
   df_grads <-
     map(grads, function(x) as.data.frame(x[c('year_admitted', 'stream', 'MA_completed', 'PhD_completed')])) %>%

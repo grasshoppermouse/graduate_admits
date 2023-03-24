@@ -1,3 +1,4 @@
+#+ message=F
 
 source('simulation.R')
 
@@ -45,6 +46,8 @@ d_sum$course <- factor(d_sum$course, levels = levels(d_median$course))
 
 # Elective course numbers must be divided by the average number
 # of elective courses offered each semester
+
+#+ fig.width=10
 ggplot(d_sum, aes(N, course, colour=Frequency)) +
   geom_count() +
   geom_point(data = d_median, aes(median, course), colour = 'black', shape = 3, size = 6) +
