@@ -188,16 +188,11 @@ stream_cohort <- function(year, stream, lambda){
 
 # This function creates the entire cohort for year (all streams combined)
 # and adds it to the existing grads
-cohort <- function(year, grads, arch_lambda, cult_lambda, evo_lambda){
-
-  for (s in stream_cohort(year, 'arch', arch_lambda)){
-    grads[[length(grads)+1]] <- s
-  }
-  for (s in stream_cohort(year, 'cult', cult_lambda)){
-    grads[[length(grads)+1]] <- s
-  }
-  for (s in stream_cohort(year, 'evo', evo_lambda)){
-    grads[[length(grads)+1]] <- s
+cohort <- function(year, grads, stream_admit_lambdas){
+  for (stream in names(stream_admit_lambdas)){
+    for (s in stream_cohort(year, stream, stream_admit_lambdas[[stream]])){
+      grads[[length(grads)+1]] <- s
+    }
   }
   return(grads)
 }
@@ -219,7 +214,7 @@ cohort <- function(year, grads, arch_lambda, cult_lambda, evo_lambda){
   # cult_lambda = 2
   # evo_lambda = 2
 
-sim <- function(years, arch_lambda=3, cult_lambda = 2, evo_lambda = 2){  
+sim <- function(years, stream_admit_lambdas){  
 
   # No grads to begin with
   grads <- list() 
@@ -241,7 +236,7 @@ sim <- function(years, arch_lambda=3, cult_lambda = 2, evo_lambda = 2){
     # Add new cohort to existing grads in the Fall
     # and print out basic stats
     if (semester == 'Fall'){
-      grads <- cohort(year, grads, arch_lambda, cult_lambda, evo_lambda)
+      grads <- cohort(year, grads, stream_admit_lambdas)
       
       completed_grads <- sum(map_lgl(grads, function(x) x$completed))
       active_grads <- c(active_grads, length(grads)-completed_grads)

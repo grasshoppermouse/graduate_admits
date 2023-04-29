@@ -3,7 +3,13 @@
 source('simulation.R')
 
 years <- seq(2000.5, 2050, 0.5)
-out <- sim(years)
+stream_admit_lambdas <- list(
+  'arch' = 3,
+  'cult' = 2,
+  'evo' = 2
+)
+
+out <- sim(years, stream_admit_lambdas)
 
 grads <- out$grads
 
