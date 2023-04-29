@@ -1,6 +1,8 @@
 library(tidyverse)
 
-# Stream degree requirements
+##### Permutations of requirements #####
+
+### Current requirements ###
 
 # Arch MA 
 # reqs: 530, 537, 1 cult elective, 1 evo elective
@@ -18,8 +20,8 @@ library(tidyverse)
 # If, e.g., multiple "arch electives" are required, then they appear
 # the necessary number of times
 
-archMA<- c("arch theory 530", "quant 537", "cult elective", "evo elective", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
-archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "open elective", "open elective", "open elective", "open elective")
+#archMA<- c("arch theory 530", "quant 537", "cult elective", "evo elective", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
+#archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "open elective", "open elective", "open elective", "open elective")
 
 # Cult MA
 # reqs: 537, 554, 1 arch elective, 1 evo elective
@@ -34,8 +36,8 @@ archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "ope
 # 2 open electives
 # 20 units of 800
 
-cultMA <- c("quant 537", "field methods 554", "arch elective", "evo elective", "cult theory", "cult theory", "cult ethnography", "cult ethnography", "cult linguistic", "open elective", "open elective")
-cultPhD <- c("cult comm", "open elective", "open elective")
+#cultMA <- c("quant 537", "field methods 554", "arch elective", "evo elective", "cult theory", "cult theory", "cult ethnography", "cult ethnography", "cult linguistic", "open elective", "open elective")
+#cultPhD <- c("cult comm", "open elective", "open elective")
 
 # Evo MA
 # reqs: 537, 3 evo elect, 1 arch elect, 1 cult elect
@@ -47,10 +49,60 @@ cultPhD <- c("cult comm", "open elective", "open elective")
 # 5 open electives
 # 20 units 800
 
-evoMA <- c("quant 537", "evo elective", "evo elective", "evo elective", "arch elective", "cult elective", "open elective", "open elective", "open elective")
-evoPhD <- c("evo elective", "evo elective", "evo elective", "open elective", "open elective", "open elective", "open elective", "open elective")
+#evoMA <- c("quant 537", "evo elective", "evo elective", "evo elective", "arch elective", "cult elective", "open elective", "open elective", "open elective")
+#evoPhD <- c("evo elective", "evo elective", "evo elective", "open elective", "open elective", "open elective", "open elective", "open elective")
 
-# Course catalog by year and semester
+
+### Anne's original proposal (vintage April 15ish) ###
+
+# Prioritizes two series: series of theory cores (arch, evo, cultural) and series of methods (qual, quant, mixed); gives evo and cultural the same requirements (that is, it's a merge), which are more like what cultural has now in length
+
+#archMA<- c("arch theory 530", "quant 537", "evo theory 562", "cult theory 510", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
+#archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "open elective", "open elective", "open elective", "open elective")
+
+#cultMA <- c("quant 537", "field methods 554", "arch theory 530", "evo theory 562", "cult theory 510", "cult ethnography", "open elective", "open elective")
+#cultPhD <- c("comm-grants", "open elective", "open elective")
+
+#evoMA <- c("quant 537", "field methods 554", "arch theory 530", "evo theory 562", "cult theory 510", "cult ethnography", "open elective", "open elective")
+#evoPhD <- c("comm-grants", "open elective", "open elective")
+
+### Thread-emerged proposal ###
+
+# No cores at MA level (because not requiring arch), no comm/grants requirement; note MA courses will not fill two years as written BUT maybe that's okay to get butts concentrated in classes
+
+archMA<- c("arch theory 530", "quant 537", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
+archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "open elective", "open elective", "open elective", "open elective")
+
+cultMA <- c("quant 537", "field methods 554", "cult ethnography", "open elective", "open elective")
+cultPhD <- c("open elective", "open elective", "arch theory 530") # recommend grants and comms but not require
+
+evoMA <- c("quant 537", "field methods 554", "cult ethnography", "open elective", "open elective")
+evoPhD <- c("open elective", "open elective", "arch theory 530") # recommend grants and comms but not require
+
+##### Course availability #####
+
+### Current offerings ###
+
+#course_catalog <- tribble(
+#  ~course,            ~year,            ~semester,
+#  'arch lab',         'Every year',    'Both semesters',
+#  'arch elective',    'Every year',    'Both semesters',
+#  'cult elective',    'Every year',    'Both semesters',
+#  'evo elective',     'Every year',    'Both semesters',
+#  'open elective',    'Every year',    'Both semesters',
+#  'cult theory',      'Every year',    'Both semesters',
+#  'cult ethnography', 'Every year',    'Both semesters',
+#  'arch theory 530',  'Every year',    'Fall',
+#  'quant 537',        'Every year',    'Fall',
+#  'field methods 554','Every year',    'Fall',
+#  'cult comm',        'Even years',    'Spring',
+#  'cult linguistic',  'Odd years',     'Spring'
+#) %>% 
+#  mutate(
+#    Frequency = paste(semester, year)
+#  )
+
+### Anne's original proposal ###
 
 course_catalog <- tribble(
   ~course,            ~year,            ~semester,
@@ -59,12 +111,13 @@ course_catalog <- tribble(
   'cult elective',    'Every year',    'Both semesters',
   'evo elective',     'Every year',    'Both semesters',
   'open elective',    'Every year',    'Both semesters',
-  'cult theory',      'Every year',    'Both semesters',
-  'cult ethnography', 'Every year',    'Both semesters',
+  'cult theory 510',      'Every year',    'Spring',
+  'evo theory 562',       'Every year',    'Spring',
+  'cult ethnography', 'Even years',    'Fall',
   'arch theory 530',  'Every year',    'Fall',
   'quant 537',        'Every year',    'Fall',
-  'field methods 554','Every year',    'Fall',
-  'cult comm',        'Even years',    'Spring',
+  'field methods 554','Odd years',    'Fall',
+  'comm-grants',        'Even years',    'Spring',
   'cult linguistic',  'Odd years',     'Spring'
 ) %>% 
   mutate(
@@ -85,6 +138,8 @@ course_schedule <- function(year){
     )
   return(offerings$course)
 }
+
+##### Create students and cohorts #####
 
 # This function creates a grad student,
 # which is a list containing the courses needed
@@ -149,14 +204,23 @@ cohort <- function(year, grads, arch_lambda, cult_lambda, evo_lambda){
 
 # This function runs the simulation for a range of years
 # And returns course enrollments per year per semester
-sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
   
   # Stream admits: Poisson rate param defaults
+  
   # From mean stream admits 2020-2022
   # arch_lambda = 3.7
   # cult_lambda = 1.7
   # evo_lambda = 2
+
+#sim <- function(years, arch_lambda=3.7, cult_lambda = 1.7, evo_lambda = 2){
   
+  # 2022 admits, plus eyeballing, plus incoming 2023
+  # arch_lambda = 3
+  # cult_lambda = 2
+  # evo_lambda = 2
+
+sim <- function(years, arch_lambda=3, cult_lambda = 2, evo_lambda = 2){  
+
   # No grads to begin with
   grads <- list() 
   
