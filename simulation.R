@@ -70,60 +70,33 @@ library(tidyverse)
 
 # No cores at MA level (because not requiring arch), no comm/grants requirement; note MA courses will not fill two years as written BUT maybe that's okay to get butts concentrated in classes
 
-archMA<- c("arch theory 530", "quant 537", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
-archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "open elective", "open elective", "open elective", "open elective")
+# archMA<- c("arch theory 530", "quant 537", "arch elective", "arch elective", "arch lab", "arch lab", "arch lab")
+# archPhD <- c("arch elective", "arch elective", "arch elective", "arch lab", "open elective", "open elective", "open elective", "open elective")
+# 
+# cultMA <- c("quant 537", "field methods 554", "cult ethnography", "open elective", "open elective")
+# cultPhD <- c("open elective", "open elective", "arch theory 530") # recommend grants and comms but not require
+# 
+# evoMA <- c("quant 537", "field methods 554", "cult ethnography", "open elective", "open elective")
+# evoPhD <- c("open elective", "open elective", "arch theory 530") # recommend grants and comms but not require
 
-cultMA <- c("quant 537", "field methods 554", "cult ethnography", "open elective", "open elective")
-cultPhD <- c("open elective", "open elective", "arch theory 530") # recommend grants and comms but not require
 
-evoMA <- c("quant 537", "field methods 554", "cult ethnography", "open elective", "open elective")
-evoPhD <- c("open elective", "open elective", "arch theory 530") # recommend grants and comms but not require
-
-##### Course availability #####
-
-### Current offerings ###
-
-#course_catalog <- tribble(
-#  ~course,            ~year,            ~semester,
-#  'arch lab',         'Every year',    'Both semesters',
-#  'arch elective',    'Every year',    'Both semesters',
-#  'cult elective',    'Every year',    'Both semesters',
-#  'evo elective',     'Every year',    'Both semesters',
-#  'open elective',    'Every year',    'Both semesters',
-#  'cult theory',      'Every year',    'Both semesters',
-#  'cult ethnography', 'Every year',    'Both semesters',
-#  'arch theory 530',  'Every year',    'Fall',
-#  'quant 537',        'Every year',    'Fall',
-#  'field methods 554','Every year',    'Fall',
-#  'cult comm',        'Even years',    'Spring',
-#  'cult linguistic',  'Odd years',     'Spring'
-#) %>% 
-#  mutate(
-#    Frequency = paste(semester, year)
-#  )
-
-### Anne's original proposal ###
-
-course_catalog <- tribble(
-  ~course,            ~year,            ~semester,
-  'arch lab',         'Every year',    'Both semesters',
-  'arch elective',    'Every year',    'Both semesters',
-  'cult elective',    'Every year',    'Both semesters',
-  'evo elective',     'Every year',    'Both semesters',
-  'open elective',    'Every year',    'Both semesters',
-  'cult theory 510',      'Every year',    'Spring',
-  'evo theory 562',       'Every year',    'Spring',
-  'cult ethnography', 'Even years',    'Fall',
-  'arch theory 530',  'Every year',    'Fall',
-  'quant 537',        'Every year',    'Fall',
-  'field methods 554','Odd years',    'Fall',
-  'comm-grants',        'Even years',    'Spring',
-  'cult linguistic',  'Odd years',     'Spring'
-) %>% 
-  mutate(
-    Frequency = paste(semester, year)
+# create streams
+create_stream <- function(stream, reqs, lambda){
+  list(
+    name = stream,
+    lambda = lambda,
+    MA = reqs$MA,
+    PhD = reqs$PhD
   )
+}
 
+create_streams <- function(arch_reqs, cult_reqs, evo_reqs, arch_lambda, cult_lambda, evo_lambda){
+  list(
+    arch = create_stream('arch', arch_reqs, arch_lambda),
+    cult = create_stream('cult', cult_reqs, cult_lambda),
+    evo = create_stream('evo', evo_reqs, evo_lambda)
+  )
+}
 # This function spits out the course offerings for each semester, e.g.,
 # 2020.0 is Spring semester, and 2020.5 is Fall semester
 course_schedule <- function(year){
@@ -145,28 +118,11 @@ course_schedule <- function(year){
 # which is a list containing the courses needed
 # for each degree for each stream
 student <- function(year, stream){
-  
-  # Assign courses for stream MA defined earlier
-  MA <- switch(
-    stream,
-    arch = archMA,
-    cult = cultMA,
-    evo = evoMA
-  )
-  
-  # Assign courses for stream PhD defined earlier
-  PhD <- switch(
-    stream,
-    arch = archPhD,
-    cult = cultPhD,
-    evo = evoPhD
-  )
-  
   list(
     year_admitted = year,
-    stream = stream,
-    MA = sample(MA), # randomize order
-    PhD = sample(PhD), # randomize order
+    stream = stream$name,
+    MA = sample(stream$MA), # randomize order
+    PhD = sample(stream$PhD), # randomize order
     MA_completed = NA, # Year finished taking all MA courses
     PhD_completed = NA, # Year finished taking all PhD courses
     completed = FALSE
@@ -177,8 +133,8 @@ student <- function(year, stream){
 # given year for a given stream, using a Poisson
 # distribution with rate parameter computed from
 # the file from Kam
-stream_cohort <- function(year, stream, lambda){
-  n <- rpois(1, lambda)
+stream_cohort <- function(year, stream){
+  n <- rpois(1, stream$lambda)
   cohort <- list()
   for (i in 1:n){
     cohort <- append(cohort, list(student(year, stream)))
@@ -188,9 +144,9 @@ stream_cohort <- function(year, stream, lambda){
 
 # This function creates the entire cohort for year (all streams combined)
 # and adds it to the existing grads
-cohort <- function(year, grads, stream_admit_lambdas){
-  for (stream in names(stream_admit_lambdas)){
-    for (s in stream_cohort(year, stream, stream_admit_lambdas[[stream]])){
+cohort <- function(year, grads, streams){
+  for (stream in streams){
+    for (s in stream_cohort(year, stream)){
       grads[[length(grads)+1]] <- s
     }
   }
@@ -214,7 +170,7 @@ cohort <- function(year, grads, stream_admit_lambdas){
   # cult_lambda = 2
   # evo_lambda = 2
 
-sim <- function(years, stream_admit_lambdas){  
+sim <- function(years, streams){  
 
   # No grads to begin with
   grads <- list() 
@@ -236,7 +192,7 @@ sim <- function(years, stream_admit_lambdas){
     # Add new cohort to existing grads in the Fall
     # and print out basic stats
     if (semester == 'Fall'){
-      grads <- cohort(year, grads, stream_admit_lambdas)
+      grads <- cohort(year, grads, streams)
       
       completed_grads <- sum(map_lgl(grads, function(x) x$completed))
       active_grads <- c(active_grads, length(grads)-completed_grads)
@@ -298,15 +254,13 @@ sim <- function(years, stream_admit_lambdas){
     }
   }
   
-  cat('Summary of the number of grads actively taking courses each semester:\n')
-  print(summary(active_grads))
-  
   df_grads <-
     map(grads, function(x) as.data.frame(x[c('year_admitted', 'stream', 'MA_completed', 'PhD_completed')])) %>%
     list_rbind()
   
   list(
     courses = courses,
-    grads = df_grads
+    grads = df_grads,
+    summary = summary(active_grads)
   )
 }
