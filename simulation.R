@@ -99,7 +99,7 @@ create_streams <- function(arch_reqs, cult_reqs, evo_reqs, arch_lambda, cult_lam
 }
 # This function spits out the course offerings for each semester, e.g.,
 # 2020.0 is Spring semester, and 2020.5 is Fall semester
-course_schedule <- function(year){
+course_schedule <- function(year, course_catalog){
   even_odd_year <- ifelse(floor(year) %% 2 == 0, 'Even years', 'Odd years')
   thissemester <- ifelse(year - floor(year) == 0, 'Spring', 'Fall')
 
@@ -170,7 +170,8 @@ cohort <- function(year, grads, streams){
   # cult_lambda = 2
   # evo_lambda = 2
 
-sim <- function(years, streams){  
+
+sim <- function(years, streams, course_catalog){  
 
   # No grads to begin with
   grads <- list() 
@@ -200,7 +201,7 @@ sim <- function(years, streams){
       # cat(paste('\nCompleted:', completed_grads))
     }
     
-    course_offerings <- course_schedule(year)
+    course_offerings <- course_schedule(year, course_catalog)
     
     # Loop through all grads and check if they still
     # need to take courses and if those courses are offered

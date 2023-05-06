@@ -1,26 +1,3 @@
-#+ message=F
-library(furrr)
-source('simulation.R')
-source('params.R')
-
-plan(multisession, workers = 5)
-
-years <- seq(2000.5, 2050, 0.5)
-
-# Create all combos of orgs, reqs, and lambdas
-params <- expand_grid(
-  arch_reqs, 
-  cult_reqs, 
-  evo_reqs, 
-  arch_lambda = 1:4,
-  cult_lambda = 1:4,
-  evo_lambda = 1:4
-)
-
-params$streams <- pmap(params, create_streams)
-# params$out <- map(params$streams, \(x) sim(years, x), .progress = T)
-out <- future_map(params$streams[1:10], \(x) sim(years, x), .progress = T, .options = furrr_options(seed = 123))
-
 
 grads <- out$grads
 

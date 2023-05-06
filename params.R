@@ -42,26 +42,27 @@ evo_reqs = list(
 
 ##### Course availability #####
 
+
 ### Current offerings ###
 
-course_catalog <- tribble(
-  ~course,            ~year,            ~semester,
-  'arch lab',         'Every year',    'Both semesters',
-  'arch elective',    'Every year',    'Both semesters',
-  'cult elective',    'Every year',    'Both semesters',
-  'evo elective',     'Every year',    'Both semesters',
-  'open elective',    'Every year',    'Both semesters',
-  'cult theory',      'Every year',    'Both semesters',
-  'cult ethnography', 'Every year',    'Both semesters',
-  'arch theory 530',  'Every year',    'Fall',
-  'quant 537',        'Every year',    'Fall',
-  'field methods 554','Every year',    'Fall',
-  'cult comm',        'Even years',    'Spring',
-  'cult linguistic',  'Odd years',     'Spring'
-) %>%
-  mutate(
-    Frequency = paste(semester, year)
-  )
+# course_catalog <- tribble(
+#   ~course,            ~year,            ~semester,
+#   'arch lab',         'Every year',    'Both semesters',
+#   'arch elective',    'Every year',    'Both semesters',
+#   'cult elective',    'Every year',    'Both semesters',
+#   'evo elective',     'Every year',    'Both semesters',
+#   'open elective',    'Every year',    'Both semesters',
+#   'cult theory',      'Every year',    'Both semesters',
+#   'cult ethnography', 'Every year',    'Both semesters',
+#   'arch theory 530',  'Every year',    'Fall',
+#   'quant 537',        'Every year',    'Fall',
+#   'field methods 554','Every year',    'Fall',
+#   'cult comm',        'Even years',    'Spring',
+#   'cult linguistic',  'Odd years',     'Spring'
+# ) %>%
+#   mutate(
+#     Frequency = paste(semester, year)
+#   )
 
 ### Anne's original proposal ###
 
