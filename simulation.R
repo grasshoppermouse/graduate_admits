@@ -80,6 +80,47 @@ library(tidyverse)
 # evoPhD <- c("open elective", "open elective", "arch theory 530") # recommend grants and comms but not require
 
 
+# Plot function
+
+plot_run <- function(params, row){
+  d <-
+    params$out[[row]]$courses %>%
+    rename(numeric_year = year) %>%
+    left_join(params$catalog[[row]]) %>%
+    group_by(numeric_year, year, semester, course) %>%
+    summarise(
+      N = n()
+    ) %>%
+    mutate(
+      Frequency = paste(semester, year)
+    )
+  
+  d_median <-
+    d %>%
+    group_by(course) %>%
+    summarise(
+      median = median(N)
+    ) %>%
+    mutate(
+      course = fct_reorder(course, median)
+    )
+  
+  d$course <- factor(d$course, levels = levels(d_median$course))
+  
+  ggplot(d, aes(N, course, colour=Frequency)) +
+    geom_count() +
+    geom_point(data = d_median, aes(median, course), colour = 'black', shape = 3, size = 6) +
+    xlim(0,NA) +
+    guides(colour = guide_legend(override.aes = list(size = 5))) +
+    labs(
+      title = 'Course enrollment distribution',
+      subtitle = 'Cross: median enrollment',
+      x = '\nEnrollment per semester',
+      y = ''
+    ) +
+    theme_minimal(15)
+}
+
 # create streams
 create_stream <- function(stream, reqs, lambda){
   list(
@@ -123,6 +164,7 @@ student <- function(year, stream){
     stream = stream$name,
     MA = sample(stream$MA), # randomize order
     PhD = sample(stream$PhD), # randomize order
+    xstream_electives = character(0), # completed cross-stream electives
     MA_completed = NA, # Year finished taking all MA courses
     PhD_completed = NA, # Year finished taking all PhD courses
     completed = FALSE
@@ -191,7 +233,6 @@ sim <- function(years, streams, course_catalog){
     semester <- ifelse(year - floor(year) == 0, 'Spring', 'Fall')
     
     # Add new cohort to existing grads in the Fall
-    # and print out basic stats
     if (semester == 'Fall'){
       grads <- cohort(year, grads, streams)
       
@@ -220,18 +261,67 @@ sim <- function(years, streams, course_catalog){
         degree <- "PhD"
       }
       
-      # Course offerings that fulfill degree requirements
+      # Course offerings that fulfill degree requirements (not including cross-stream electives)
       available <- intersect(grad[[degree]], course_offerings)
-      if (length(available) == 0) next
+      
+      # For generic cross-stream electives, any course from that stream will do
+      cross_available <- character(0)
+      if ('arch' %in% grad[[degree]]){
+        cross_available <- c(
+          cross_available, 
+          course_offerings[str_detect(course_offerings, 'arch') & !str_detect(course_offerings, 'lab')]
+        )
+      }
+      if ('cult' %in% grad[[degree]]){
+        cross_available <- c(
+          cross_available,
+          course_offerings[str_detect(course_offerings, 'cult')]
+        )
+      }
+      if ('evo' %in% grad[[degree]]){
+        cross_available <- c(
+          cross_available, 
+          course_offerings[str_detect(course_offerings, 'evo')]
+        )
+      }
+      
+      # Remove courses from cross_available that have already been taken
+      already_taken <- intersect(grad$xstream_electives, cross_available)
+      if (length(already_taken) > 0){
+        cross_available <- cross_available[-match(already_taken, cross_available)]
+      }
+      
+      if (length(available) == 0 & length(cross_available) == 0) next
       
       # Every year everyone takes 3 courses every semester until degree requirements are met 
       # (or at least as many needed courses are available)
-      num_courses <- min(length(available), 3)
-      grad_schedule <- available[1:num_courses]
       
-      # Remove these courses from list of courses still needed for degree
-      grads[[i]][[degree]] <- grad[[degree]][-(match(grad_schedule, grad[[degree]]))]
+      grad_schedule <- character(0)
+      if (length(available) > 0){
+        num_courses <- min(length(available), 3)
+        grad_schedule <- available[1:num_courses]
+        
+        # Remove these courses from list of courses still needed for degree
+        grads[[i]][[degree]] <- grad[[degree]][-match(grad_schedule, grad[[degree]])]
+      }
       
+      # Now deal with cross-stream electives if needed to fill out schedule
+      if (length(cross_available) > 0 & length(grad_schedule) < 3){
+        cross_available <- sample(cross_available, length(cross_available)) # scramble first
+        needed <- 3 - length(grad_schedule) # number of extra courses needed
+        num2take <- min(needed, length(cross_available))
+        take <- cross_available[1:num2take]
+        grads[[i]]$xstream_electives <- c(grads[[i]]$xstream_electives, take) # record them as taken
+        grad_schedule <- c(grad_schedule, take) # add courses to schedule
+        remove <- character(0)
+        for (course in take){
+          if (str_detect(course, 'arch')) remove <- c(remove, 'arch')
+          if (str_detect(course, 'cult')) remove <- c(remove, 'cult')
+          if (str_detect(course, 'evo')) remove <- c(remove, 'evo')
+        }
+        grads[[i]][[degree]] <- grad[[degree]][-match(remove, grad[[degree]])]
+      }
+
       # After finishing MA, an average of 50% of students leave
       if (degree == 'MA' & length(grads[[i]]$MA) == 0){
         grads[[i]]$MA_completed <- year
@@ -243,13 +333,13 @@ sim <- function(years, streams, course_catalog){
         grads[[i]]$completed <- TRUE
       } 
       
-      # Add this students courses to data frame of all courses taken
+      # Add student's courses to data frame of all courses taken
       courses <- rbind(
         courses,
         data.frame(
-          year = rep(year, num_courses),
+          year = rep(year, length(grad_schedule)),
           course = grad_schedule,
-          stream = rep(grad$stream, num_courses)
+          stream = rep(grad$stream, length(grad_schedule))
         )
       )
     }

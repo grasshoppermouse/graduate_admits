@@ -1,57 +1,89 @@
+#+ message=F, warning=F
 
-grads <- out$grads
+library(tidyverse)
+library(ggcorrplot)
+library(hagenutils)
 
-grads %>% 
-  mutate(
-    MA_time = MA_completed - year_admitted + 0.5,
-    PhD_time = PhD_completed - year_admitted + 0.5
-  ) %>% 
-  group_by(stream) %>% 
-  summarise(
-    MeanMATime = mean(MA_time, na.rm = T),
-    MeanPhDTime = mean(PhD_time, na.rm = T)
-  )
-  
-d <- out$courses
+load('params.rds')
 
-# Summarize enrollments by year, semester, and course
-d_sum <-
-  d %>%
-  mutate(
-    semester = ifelse(year - floor(year) == 0, 'spring', 'fall')
-  ) %>%
-  group_by(year, semester, course) %>%
-  summarise(
-    N = n()
-  ) %>% 
-  left_join(course_catalog[c('course', 'Frequency')])
+#' # Time to MA
 
-d_median <-
-  d_sum %>% 
-  group_by(course) %>% 
-  summarise(
-    median = median(N)
-  ) %>% 
-  mutate(
-    course = fct_reorder(course, median)
-  )
+# These are averaging over mean admit rates from 1 to 4
 
-d_sum$course <- factor(d_sum$course, levels = levels(d_median$course))
+# Mean time to Arch MA by freq of electives (rows) and nonelectives (cols)
+# Low freq: once a semester, every other year
+# Med freq: once a semester, every year
+# High freq: both semesters, every year
 
-# Elective course numbers must be divided by the average number
-# of elective courses offered each semester
+# Arch
+#+ message=F, warning=F
+ggplot(params, aes(MeanMAtime_arch)) +
+  geom_histogram() +
+  facet_grid(elective_freq ~ nonelective_freq)
 
-#+ fig.width=10
-ggplot(d_sum, aes(N, course, colour=Frequency)) +
-  geom_count() +
-  geom_point(data = d_median, aes(median, course), colour = 'black', shape = 3, size = 6) +
-  xlim(0,NA) +
-  guides(colour = guide_legend(override.aes = list(size = 5))) +
-  labs(
-    title = 'Course enrollment distribution',
-    subtitle = 'Cross: median enrollment',
-    x = '\nEnrollment per semester',
-    y = ''
-  ) +
-  theme_minimal(15)
+# Cult
+#+ message=F, warning=F
+ggplot(params, aes(MeanMAtime_cult)) +
+  geom_histogram() +
+  facet_grid(elective_freq ~ nonelective_freq)
 
+# Evo
+#+ message=F, warning=F
+ggplot(params, aes(MeanMAtime_evo)) +
+  geom_histogram() +
+  facet_grid(elective_freq ~ nonelective_freq)
+
+#' # Time to PhD
+
+# These are averaging over mean admit rates from 1 to 4
+
+# Arch
+#+ message=F, warning=F
+ggplot(params, aes(MeanPhDtime_arch)) +
+  geom_histogram() +
+  facet_grid(elective_freq ~ nonelective_freq)
+
+# Cult
+#+ message=F, warning=F
+ggplot(params, aes(MeanPhDtime_cult)) +
+  geom_histogram() +
+  facet_grid(elective_freq ~ nonelective_freq)
+
+# Evo
+#+ message=F, warning=F
+ggplot(params, aes(MeanPhDtime_evo)) +
+  geom_histogram() +
+  facet_grid(elective_freq ~ nonelective_freq)
+
+#' # Proportion of courses that "make" with minimum of 6 students
+
+# These are averaging over mean admit rates from 1 to 4
+#+ message=F, warning=F
+ggplot(params, aes(overall)) +
+  geom_histogram() +
+  facet_grid(elective_freq ~ nonelective_freq)
+
+#+ message=F, warning=F
+m1 <- glm(overall ~ arch_lambda + cult_lambda + evo_lambda + elective_freq + nonelective_freq, family = binomial, params)
+summary(m1)
+
+m2 <- glm(median_courses_semester ~ arch_lambda + cult_lambda + evo_lambda + elective_freq + nonelective_freq, family = poisson, params)
+summary(m2)
+
+# visreg(m2, scale = 'response')
+# 
+# params2 %>% 
+#   dplyr::select(where(is.numeric)) %>% 
+#   cor() %>% 
+#   ggcorrplot()
+# 
+# params2 %>% 
+#   dplyr::select(where(is.numeric)) %>% 
+#   t() %>% 
+#   hagenheat(., scale. = 'column', method = 'hclust')
+# 
+# tmp <-
+#   params2[c('overall', 'elective_freq2', 'nonelective_freq2', 'arch_lambda', 'cult_lambda', 'evo_lambda', 'MeanMAtime_arch', 'MeanPhDtime_arch', 'MeanMAtime_cult', 'MeanPhDtime_cult', 'MeanMAtime_evo', 'MeanPhDtime_evo', 'median_courses_semester')]
+# 
+# ggcorrplot(cor(tmp), hc.order = T, hc.method = 'ward.D')
+# 
